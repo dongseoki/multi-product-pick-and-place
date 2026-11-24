@@ -11,3 +11,7 @@
 - `raw/data/big_files/팀프로젝트 3일차 요구사항 명세.pdf` — D03 요구사항의 계층·우선순위·검증 기준과 판정 함수·테스트 작성 안내
 
 미니 프로젝트의 현재 범위와 시험 조건은 [문제 정의서](docs/problem.md)를 우선한다. 외부 자료에 접근할 수 없는 환경에서는 저장소 문서로 확인할 수 있는 부분부터 진행한다.
+
+## 발표용 PowerPoint
+
+이 프로젝트의 발표용 PPTX 제작을 요청받으면, 다른 템플릿이 지정되지 않은 경우 위 WSL 기준 경로의 `raw/data/big_files/Technology Consulting _ by Slidesgo.pptx`를 사용한다. 완성본에 템플릿의 Slidesgo 출처 슬라이드를 포함한다.
