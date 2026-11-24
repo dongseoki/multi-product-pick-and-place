@@ -4,7 +4,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | D01 | [문제 정의서](problem.md) | Problem Statement | 01 Discovery | 이동석(PM) | 이동석(자체 검토) | 작성 | v2 | — |
 | D02 | [팀 차터](charter_v2.md) | Project Charter | 01 Discovery | 이동석(PM) | 이동석(자체 검토) | 작성 | v0.1 | — |
-| D03 | 요구사항 명세 | PRD / SRS | 02 Requirements | 이동석(PM) | 이동석(QA·운영) | 미작성 | — | — |
+| D03 | [요구사항 명세](requirements.md) | PRD / SRS | 02 Requirements | 이동석(PM) | 이동석(QA·운영) | 작성 | v0.1 | R-01~R-06 |
 | D04 | 테스트 시나리오·요구사항 추적표 | Traceability Matrix | 02 Requirements | 이동석(QA·운영) | 이동석(PM) | 미작성 | — | — |
 | D05 | 계획·WBS·위험 목록 | Project Plan / Risk Register | 02 Requirements | 이동석(PM) | 이동석(자체 검토) | 미작성 | — | — |
 | D06 | 시스템 구조 | System Architecture / ICD | 03 Design | 이동석(시뮬레이션) | 이동석(개발) | 미작성 | — | — |
