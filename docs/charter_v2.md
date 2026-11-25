@@ -41,3 +41,6 @@ MuJoCo에서 구현한다. 실물 로봇팔의 기준은 **myCobot 280 M5Stack**
 
 ### mujoco프로젝트 에서 활용할 상품 B의 형태
 ![A_B 파지 상세도](./A_B%20파지%20상세도.png)
+
+### mujoco 프로젝트 3D 이미지
+![mujoco 프로젝트 3D 이미지](./pick-and-place-conveyor-concept.png)
