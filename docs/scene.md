@@ -19,6 +19,17 @@
 - [Elephant Robotics ROS 2 저장소](https://github.com/elephantrobotics/mycobot_ros2)는 myCobot 280 M5와 Adaptive Gripper 조합을 URDF 모델 목록에 제공한다. 이 조합을 우선 검토하되, MuJoCo에 올려 관절과 충돌 형상을 검증하기 전에는 채택을 확정하지 않는다.
 - [Elephant Robotics MuJoCo 예제](https://github.com/elephantrobotics/mycobot_mujoco)의 `xml/mycobot_280jn_mujoco.xml`은 JetsonNano용이다. M5Stack과 그리퍼 조합의 완성 모델이 아니라 MJCF 구성 참고용으로 둔다.
 
+### 모델 로드 및 자세 변화 확인
+
+제조사 [URDF 커밋](https://github.com/elephantrobotics/mycobot_ros2/blob/25bec49559ba119395f4d335d3da230bdad494d8/mycobot_description/urdf/mycobot_280_m5/mycobot_280_m5_adaptive_gripper.urdf)을 고정해 검사한다. 스크립트는 임시 디렉터리에서 DAE 메시를 원본 단위에 맞춰 m 단위 OBJ로 변환한다. 변환 도구는 이 명령에서만 사용하며, 프로젝트의 기본 의존성에는 추가하지 않는다.
+
+```bash
+uv run --locked --with trimesh==5.2.2 --with pycollada==0.9.3 \
+  python scripts/check_mycobot_model.py
+```
+
+MuJoCo 3.3.7에서 팔 관절 6개, 그리퍼 관절 6개, 메시 15개가 로드됐다. 관절 위치(`qpos`)를 직접 설정했을 때 팔과 손가락의 자세가 변하는 것을 확인했다. 가져온 모델에는 액추에이터와 관절 연동 제약이 모두 없어서, 이 검사에서는 URDF의 연동 관계를 읽어 종속 관절 위치를 직접 설정한다. **제어 명령에 의한 구동, 병목 접촉, 병 들어 올리기는 아직 검증하지 않았다.** 다음은 구동과 연동을 모델에 반영하고 병을 배치해 접촉·들기 시험을 하는 것이다.
+
 ## 병목·접촉·칸 경계
 
 - 병 바닥을 기준으로 몸통은 높이 0~0.110, 어깨는 0.110~0.120, 파지용 병목은 0.120~0.140, 뚜껑은 0.140~0.150에 둔다. 병목 파지 가능 높이의 가정값은 0.020이다.
