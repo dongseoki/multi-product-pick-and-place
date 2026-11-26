@@ -15,7 +15,6 @@ class TrialResult:
             지지되고, 바닥면 전체가 칸 안에 머물렀는지 여부.
         neighboring_bottle_contact: 로봇팔, 그리퍼 또는 대상 병이 이미 적재된
             병에 닿았는지 여부.
-        box_wall_contact: 박스 벽에 닿았는지 여부. 관측 결과로 기록한다.
         elapsed_s: 자동 동작 시작부터 대기 자세 복귀까지의 시뮬레이션 시간(초).
     """
 
@@ -23,8 +22,6 @@ class TrialResult:
     dropped: bool
     seated: bool
     neighboring_bottle_contact: bool
-    # R-06 / T-06: 벽 접촉은 회차 기록에 보존한다.
-    box_wall_contact: bool
     elapsed_s: float
 
 

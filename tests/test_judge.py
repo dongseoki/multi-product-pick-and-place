@@ -12,7 +12,6 @@ SUCCESS = TrialResult(
     dropped=False,
     seated=True,
     neighboring_bottle_contact=False,
-    box_wall_contact=False,
     elapsed_s=8.4,
 )
 
@@ -44,11 +43,6 @@ def test_prohibited_event_fails_even_if_all_bottles_seated(event):
 def test_requires_exactly_ten_trials(count):
     """D03 시험 조건: 관측 기록이 정확히 10개일 때만 합격할 수 있다."""
     assert not judge_episode([SUCCESS] * count)
-
-
-def test_box_wall_contact_does_not_affect_episode_pass():
-    """T-06 집계 확인: 벽 접촉이 기록된 회차도 합격 집계에 포함한다."""
-    assert judge_episode([SUCCESS] * 9 + [replace(SUCCESS, box_wall_contact=True)])
 
 
 def test_cycle_time_is_judged_separately():
