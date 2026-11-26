@@ -1,0 +1,12 @@
+[project]
+name = "multi-product-pick-and-place"
+version = "0.1.0"
+requires-python = ">=3.12.16,<3.13"
+dependencies = [
+    "mujoco==3.3.7",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
