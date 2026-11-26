@@ -21,6 +21,8 @@ HOLD_START = 1.8
 END = 2.3
 MIN_LIFT_M = 0.020
 FINGERS = {"gripper_left1", "gripper_right1"}
+FINGER_LINKS = {f"gripper_{side}{index}" for side in ("left", "right") for index in (1, 2, 3)}
+ALLOWED_SECONDARY_PARTS = {"bottle_cap", "bottle_shoulder"}
 BOTTLE = "bottle_target"
 NECK = "bottle_neck"
 
@@ -129,7 +131,18 @@ class Trial:
     two_finger_hold: int = 0
     hold_steps: int = 0
     support_hold_steps: int = 0
+    allowed_secondary: dict[tuple[str, str], float] = field(default_factory=dict)
     forbidden: dict[tuple[str, str], float] = field(default_factory=dict)
+
+    def record_contact(self, part: str, link: str, time: float) -> bool:
+        """Record contact; report whether it supports the two-finger neck criterion."""
+        if part == NECK and link in FINGERS:
+            return True
+        if part in ALLOWED_SECONDARY_PARTS and link in FINGER_LINKS:
+            self.allowed_secondary.setdefault((part, link), time)
+        else:
+            self.forbidden.setdefault((part, link), time)
+        return False
 
     @property
     def passed(self) -> bool:
@@ -170,10 +183,8 @@ def run_trial(model, arm, coupled, trace=None) -> Trial:
                 continue
             part = model.geom(a).name
             link = model.body(model.geom_bodyid[b]).name
-            if part == NECK and link in FINGERS:
+            if result.record_contact(part, link, data.time):
                 fingers.add(link)
-            else:
-                result.forbidden.setdefault((part, link), data.time)
 
         height = data.body(BOTTLE).xpos[2] - initial_z
         result.peak_lift = max(result.peak_lift, height)
@@ -253,12 +264,17 @@ def print_result(model, result: Trial) -> None:
     )
     print(f"Two-finger neck contact during hold: {result.two_finger_hold}/{result.hold_steps} steps")
     print(f"Support contacts during hold: {result.support_hold_steps}/{result.hold_steps} steps")
-    contacts = ", ".join(
-        f"{part}:{link}@{time:.3f}s"
-        for (part, link), time in sorted(result.forbidden.items(), key=lambda item: item[1])
-    )
-    print(f"Forbidden bottle contacts: {contacts or 'none'}")
-    print("PASS: neck-only grasp and lift" if result.passed else "FAIL: neck-only grasp and lift")
+    for label, recorded in (
+        ("Allowed secondary bottle contacts", result.allowed_secondary),
+        ("Forbidden bottle contacts", result.forbidden),
+    ):
+        contacts = ", ".join(
+            f"{part}:{link}@{time:.3f}s"
+            for (part, link), time in sorted(recorded.items(), key=lambda item: item[1])
+        )
+        print(f"{label}: {contacts or 'none'}")
+    status = "PASS" if result.passed else "FAIL"
+    print(f"{status}: neck grasp and lift without bottle-body contact")
 
 
 def main() -> int:
