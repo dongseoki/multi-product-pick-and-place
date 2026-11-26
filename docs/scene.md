@@ -17,7 +17,6 @@
 ## 모델 출처 후보
 
 - [Elephant Robotics ROS 2 저장소](https://github.com/elephantrobotics/mycobot_ros2)는 myCobot 280 M5와 Adaptive Gripper 조합을 URDF 모델 목록에 제공한다. 이 조합을 우선 검토하되, MuJoCo에 올려 관절과 충돌 형상을 검증하기 전에는 채택을 확정하지 않는다.
-- [Elephant Robotics MuJoCo 예제](https://github.com/elephantrobotics/mycobot_mujoco)의 `xml/mycobot_280jn_mujoco.xml`은 JetsonNano용이다. M5Stack과 그리퍼 조합의 완성 모델이 아니라 MJCF 구성 참고용으로 둔다.
 
 ### 모델 로드 및 자세 변화 확인
 
