@@ -9,7 +9,7 @@
 | D05 | 계획·WBS·위험 목록 | Project Plan / Risk Register | 02 Requirements | 이동석(PM) | 이동석(자체 검토) | 미작성 | — | — |
 | D06 | [시스템 구조](architecture.md) | System Architecture / ICD | 03 Design | 이동석(시뮬레이션) | 이동석(개발) | 작성 | v0.1 | R-01~R-06 |
 | D07 | [장면 구성표](scene.md) | BOM 대응 | 03 Design | 이동석(시뮬레이션) | 이동석(PM) | 작성 | v0.1 | R-01~R-04, R-06 |
-| D08 | 안전 개념 | Safety Concept | 03 Design | 이동석(시뮬레이션) | 이동석(QA·운영) | 미작성 | — | — |
+| D08 | [안전 개념](architecture.md#d08-안전-개념) | Safety Concept | 03 Design | 이동석(시뮬레이션) | 이동석(QA·운영) | 작성 | v0.1 | R-01, R-02, R-04, R-06 |
 
 이동석이 네 역할을 겸하며, 검토자 칸의 괄호는 해당 문서를 검토할 때 맡는 역할을 나타낸다. 검토자 지정은 검토 완료를 뜻하지 않는다.
 
