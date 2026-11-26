@@ -1,25 +1,18 @@
-"""Sample geometric clearance for the day-four v0 layout before authoring its MJCF."""
+"""Sample geometric clearance along the day-four v0 scene path."""
 
-from copy import deepcopy
-from math import cos, pi, sin
+from math import atan2, cos, pi, sin
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from xml.etree import ElementTree as ET
 
 import mujoco
 import numpy as np
 
-from check_mycobot_model import prepare_urdf
-from check_neck_grasp import BOTTLE, CLOSED, OPEN, START, Trial, configure_model, vector
+from check_neck_grasp import BOTTLE, CLOSED, DRIVE, OPEN, START, Trial, vector
+from check_v0_scene import SCENE, SUPPORTS
 
 HAND_OFFSET = np.array([-0.00062, 0.054, -0.1385])  # hand origin to bottle bottom
 PICKUP_YAW = -pi / 2
-TURN = pi / 3
-BOX_YAW = TURN - pi
-CELL_OFFSET = 0.035
 LIFT_HEIGHT = 0.060
-BOX_DROP = 0.045
-RETRACT = 0.045
+APPROACH_HEIGHT = 0.045
 
 
 def yaw_matrix(angle: float) -> np.ndarray:
@@ -27,48 +20,26 @@ def yaw_matrix(angle: float) -> np.ndarray:
     return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
 
 
-def add_placement(xml: Path, box_position: np.ndarray) -> None:
-    tree = ET.parse(xml)
-    world = tree.find("worldbody")
-    if world is None:
-        raise RuntimeError("Configured robot scene has no worldbody")
-    source = world.find(f"body[@name='{BOTTLE}']")
-    if source is None:
-        raise RuntimeError("Configured robot scene has no target bottle")
-    box = ET.SubElement(
-        world, "body", name="packing_box", pos=vector(box_position),
-        quat=vector((cos(BOX_YAW / 2), 0, 0, sin(BOX_YAW / 2))),
-    )
-
-    def block(name, half_size, center) -> None:
-        ET.SubElement(
-            box, "geom", name=name, type="box", pos=vector(center),
-            size=vector(half_size), contype="4", conaffinity="3",
-        )
-
-    block("conveyor_belt", (0.100, 0.100, 0.010), (0, 0, -0.010))
-    block("target_cell_floor", (0.0725, 0.0725, 0.0025), (0, 0, 0.0025))
-    for i, coordinate in enumerate((-0.070, 0, 0.070)):
-        block(f"box_wall_x{i}", (0.0025, 0.0725, 0.020), (coordinate, 0, 0.025))
-        block(f"box_wall_y{i}", (0.0725, 0.0025, 0.020), (0, coordinate, 0.025))
-    for i, (x, y) in enumerate(
-        ((-CELL_OFFSET, -CELL_OFFSET), (-CELL_OFFSET, CELL_OFFSET), (CELL_OFFSET, -CELL_OFFSET)),
-        start=1,
-    ):
-        name = f"bottle_placed_{i}"
-        placed = ET.SubElement(box, "body", name=name, pos=vector((x, y, 0.005)))
-        for original in source.findall("geom"):
-            geom = deepcopy(original)
-            geom.set("name", f"{name}_{original.attrib['name']}")
-            geom.set("contype", "4")
-            geom.set("conaffinity", "3")
-            placed.append(geom)
-    tree.write(xml, encoding="utf-8")
-
-
-def check_layout(xml: Path, arm, coupled, pickup, placement) -> None:
+def check_layout(xml: Path) -> None:
     model = mujoco.MjModel.from_xml_path(str(xml))
     data = mujoco.MjData(model)
+    mujoco.mj_resetDataKeyframe(model, data, model.key("standby").id)
+    mujoco.mj_forward(model, data)
+    pickup = data.body(BOTTLE).xpos.copy()
+    placement = data.site("target_cell_center").xpos.copy()
+    cross = pickup[0] * placement[1] - pickup[1] * placement[0]
+    turn = atan2(cross, np.dot(pickup[:2], placement[:2]))
+
+    drive = model.joint(DRIVE).id
+    arm = [model.joint(joint).name for joint in model.actuator_trnid[:, 0] if joint != drive]
+    coupled = {DRIVE: (1.0, 0.0)}
+    for i in range(model.neq):
+        if model.eq_type[i] == mujoco.mjtEq.mjEQ_JOINT and model.eq_obj2id[i] == drive:
+            offset, multiplier = model.eq_data[i, :2]
+            coupled[model.joint(model.eq_obj1id[i]).name] = (multiplier, offset)
+    if len(arm) != len(START) or len(coupled) != 6:
+        raise RuntimeError("Unexpected arm or gripper drive configuration")
+    resting = {frozenset(pair) for pair in SUPPORTS.values()}
     hand = model.body("gripper_base").id
     bottle_id = model.body(BOTTLE).id
     bottle_qpos = model.joint("bottle_free").qposadr[0]
@@ -80,10 +51,10 @@ def check_layout(xml: Path, arm, coupled, pickup, placement) -> None:
     jr = np.zeros_like(jp)
     damping = 0.002 * np.eye(len(arm))
     q = np.array(START)
-    standby = pickup - np.array([RETRACT, 0, 0])
+    standby = pickup + np.array([0, 0, APPROACH_HEIGHT])
     raised = pickup + np.array([0, 0, LIFT_HEIGHT])
-    place_yaw = PICKUP_YAW + TURN
-    raised_place = yaw_matrix(TURN) @ raised
+    place_yaw = PICKUP_YAW + turn
+    raised_place = yaw_matrix(turn) @ raised
 
     def solve(bottom: np.ndarray, yaw: float) -> None:
         nonlocal q
@@ -121,6 +92,8 @@ def check_layout(xml: Path, arm, coupled, pickup, placement) -> None:
             if model.geom_bodyid[b] == bottle_id:
                 a, b = b, a
             part, other = model.geom(a).name, model.geom(b).name
+            if frozenset((part, other)) in resting:
+                continue
             if model.geom_bodyid[a] == bottle_id:
                 if part == "bottle_body" and other in {"support", "target_cell_floor"}:
                     continue
@@ -158,10 +131,10 @@ def check_layout(xml: Path, arm, coupled, pickup, placement) -> None:
     print("PASS close: 66 poses")
     linear("lift", pickup, raised, PICKUP_YAW, CLOSED, True, None)
 
-    for theta in np.linspace(0, TURN, 241):
+    for theta in np.linspace(0, turn, 321):
         point = yaw_matrix(theta) @ raised
         verify("transfer", point, PICKUP_YAW + theta, CLOSED, point)
-    print("PASS transfer: 241 poses")
+    print("PASS transfer: 321 poses")
     linear("placement descent", raised_place, placement, place_yaw, CLOSED, True, None)
     print_pose("Placement")
     for grip in np.linspace(CLOSED, OPEN, 66):
@@ -170,21 +143,5 @@ def check_layout(xml: Path, arm, coupled, pickup, placement) -> None:
     linear("placement retreat", placement, raised_place, place_yaw, OPEN, False, placement)
 
 
-def main() -> None:
-    with TemporaryDirectory(prefix="mycobot-v0-layout-") as directory:
-        urdf, source = prepare_urdf(Path(directory))
-        initial, arm, coupled = configure_model(urdf, source)
-        pose = mujoco.MjData(initial)
-        mujoco.mj_forward(initial, pose)
-        pickup = pose.body(BOTTLE).xpos.copy()
-        placement = yaw_matrix(TURN) @ pickup - (0, 0, BOX_DROP)
-        box = placement - yaw_matrix(BOX_YAW) @ (CELL_OFFSET, CELL_OFFSET, 0.005)
-        for name, position in (("Pickup bottom", pickup), ("Box bottom", box), ("Target floor", placement)):
-            print(f"{name} [m]: {vector(round(float(value), 8) for value in position)}")
-        xml = urdf.with_suffix(".xml")
-        add_placement(xml, box)
-        check_layout(xml, arm, coupled, pickup, placement)
-
-
 if __name__ == "__main__":
-    main()
+    check_layout(SCENE)

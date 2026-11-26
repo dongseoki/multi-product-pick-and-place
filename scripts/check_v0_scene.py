@@ -27,10 +27,33 @@ def require(condition, message: str) -> None:
         raise RuntimeError(message)
 
 
+def check_floor_and_angle(model: mujoco.MjModel, data: mujoco.MjData) -> None:
+    floor_z = data.geom("ground").xpos[2]
+    base_rotation = data.body("g_base").xmat.reshape(3, 3)
+    for name in ("support", "conveyor_belt"):
+        platform = model.geom(name).id
+        platform_z = data.geom_xpos[platform, 2]
+        half_height = model.geom_size[platform, 2]
+        require(abs(platform_z - half_height - floor_z) < 1e-7, f"{name} does not sit on the floor")
+        relative = base_rotation.T @ data.geom_xmat[platform].reshape(3, 3)
+        # Both edge directions must be parallel to the robot base axes, up to a right-angle turn.
+        require(np.allclose(np.max(np.abs(relative[:2, :2]), axis=0), 1, atol=1e-7, rtol=0)
+                and abs(relative[2, 2] - 1) < 1e-7, f"{name} is not aligned to the robot base")
+
+    base = data.body("g_base").xpos[:2]
+    pickup = data.geom("pickup_zone").xpos[:2] - base
+    belt = data.geom("conveyor_belt").xpos[:2] - base
+    dot = np.dot(pickup, belt) / (np.linalg.norm(pickup) * np.linalg.norm(belt))
+    angle = float(np.degrees(np.arccos(np.clip(dot, -1, 1))))
+    require(abs(angle - 90) < 0.001, f"Pickup and conveyor must be 90° apart; found {angle:.4f}°")
+    print(f"PASS: both platforms sit directly on the floor; base-aligned edges, center angle {angle:.3f}°")
+
+
 def check_scene(model: mujoco.MjModel) -> mujoco.MjData:
     data = mujoco.MjData(model)
     mujoco.mj_resetDataKeyframe(model, data, model.key("standby").id)
     mujoco.mj_forward(model, data)
+    check_floor_and_angle(model, data)
 
     bottles = {
         model.body(i).name for i in range(model.nbody) if model.body(i).name.startswith("bottle_")
@@ -95,12 +118,13 @@ def check_scene(model: mujoco.MjModel) -> mujoco.MjData:
     return data
 
 
-def screenshot(model: mujoco.MjModel, data: mujoco.MjData, path: Path) -> None:
+def screenshot(model: mujoco.MjModel, data: mujoco.MjData, path: Path, *, top_down: bool) -> None:
     camera = mujoco.MjvCamera()
     camera.lookat[:] = [0.102, 0.075, 0.144]
     camera.distance = 0.69
-    camera.azimuth = 126
-    camera.elevation = -49
+    camera.azimuth = 90 if top_down else 126
+    camera.elevation = -90 if top_down else -49
+    camera.orthographic = top_down
     width, height = 1000, 750
     with mujoco.Renderer(model, width=width, height=height) as renderer:
         renderer.update_scene(data, camera=camera)
@@ -120,6 +144,7 @@ def screenshot(model: mujoco.MjModel, data: mujoco.MjData, path: Path) -> None:
 def main() -> None:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("--screenshot", type=Path, help="write a PNG of the settled scene")
+    parser.add_argument("--top-down", action="store_true", help="render the screenshot from directly above")
     parser.add_argument("--viewer", action="store_true", help="open the verified scene in the MuJoCo viewer")
     args = parser.parse_args()
     if not (SCENE.parent / "_mycobot" / "robot.xml").is_file():
@@ -127,7 +152,7 @@ def main() -> None:
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     data = check_scene(model)
     if args.screenshot:
-        screenshot(model, data, args.screenshot)
+        screenshot(model, data, args.screenshot, top_down=args.top_down)
     if args.viewer:
         from mujoco import viewer
 

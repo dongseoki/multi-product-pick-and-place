@@ -8,7 +8,6 @@ from urllib.request import urlretrieve
 from xml.etree import ElementTree as ET
 
 import mujoco
-import trimesh
 
 REVISION = "25bec49559ba119395f4d335d3da230bdad494d8"
 SOURCE = f"https://raw.githubusercontent.com/elephantrobotics/mycobot_ros2/{REVISION}"
@@ -18,6 +17,8 @@ DRIVE = "gripper_controller"
 
 
 def prepare_urdf(directory: Path) -> tuple[Path, ET.Element]:
+    import trimesh
+
     path = directory / "mycobot.urdf"
     urlretrieve(f"{SOURCE}/{URDF}", path)
     tree = ET.parse(path)

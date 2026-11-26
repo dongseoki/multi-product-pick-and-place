@@ -33,13 +33,13 @@
   </default>
   <worldbody>
     <light pos="0.5 -0.45 0.9" dir="-0.4 0.4 -0.65" diffuse=".88 .88 .88"/>
-    <!-- Presentation plane and pickup marker are not colliders. -->
-    <geom name="display_ground" type="plane" pos="0 0 -.032" size="1 1 .05"
-          material="grid" contype="0" conaffinity="0"/>
-    <geom class="fixture" name="support" size=".035 .035 .010" pos=".19399984 -.06437967 .13149951"/>
-    <geom name="pickup_zone" type="box" size=".040 .040 .0005" pos=".19399984 -.06437967 .120"
+    <!-- Floor is physical; the pickup-zone marker is only visual. -->
+    <geom name="ground" type="plane" pos="0 0 -.032" size="1 1 .05"
+          material="grid" contype="4" conaffinity="2"/>
+    <geom class="fixture" name="support" size=".035 .035 .010" pos=".19399984 -.06437967 -.022"/>
+    <geom name="pickup_zone" type="box" size=".040 .040 .0005" pos=".19399984 -.06437967 -.013"
           contype="0" conaffinity="0" rgba=".24 .56 .68 1"/>
-    <body name="bottle_target" pos=".19399984 -.06437967 .14149951">
+    <body name="bottle_target" pos=".19399984 -.06437967 -.012">
       <freejoint name="bottle_free"/>
       <geom name="bottle_body" class="bottle_body"/>
       <geom name="bottle_shoulder" class="bottle_shoulder"/>
@@ -48,7 +48,7 @@
     </body>
 
     <!-- Fixed belt; the box and initially seated bottles are aligned to its local axes. -->
-    <body name="packing_box" pos=".13994346 .18362985 .09149951" quat=".5 0 0 -.8660254037844386">
+    <body name="packing_box" pos="0.06984411 0.21046622 -.012" quat=".7071067811865476 0 0 -.7071067811865476">
       <geom class="fixture" name="conveyor_belt" size=".100 .100 .010" pos="0 0 -.010" rgba=".22 .27 .32 1"/>
       <geom class="fixture" name="cell_floor_1" size=".03625 .03625 .0025" pos="-.03625 -.03625 .0025"/>
       <geom class="fixture" name="cell_floor_2" size=".03625 .03625 .0025" pos="-.03625 .03625 .0025"/>
@@ -66,36 +66,36 @@
       <geom class="fixture" name="box_wall_y2_right" size=".0325 .0025 .020" pos=".035 .070 .025"/>
     </body>
     <!-- Free bodies must be world children. Their poses are derived from the checked box frame. -->
-    <body name="bottle_placed_1" pos=".12713257 .23144074 .09649951" quat=".5 0 0 -.8660254037844386">
+    <body name="bottle_placed_1" pos="0.03484411 0.24546622 -.007" quat=".7071067811865476 0 0 -.7071067811865476">
       <freejoint/>
       <geom name="bottle_placed_1_body" class="bottle_body"/>
       <geom name="bottle_placed_1_shoulder" class="bottle_shoulder"/>
       <geom name="bottle_placed_1_neck" class="bottle_neck"/>
       <geom name="bottle_placed_1_cap" class="bottle_cap"/>
     </body>
-    <body name="bottle_placed_2" pos=".18775435 .19644074 .09649951" quat=".5 0 0 -.8660254037844386">
+    <body name="bottle_placed_2" pos="0.10484411 0.24546622 -.007" quat=".7071067811865476 0 0 -.7071067811865476">
       <freejoint/>
       <geom name="bottle_placed_2_body" class="bottle_body"/>
       <geom name="bottle_placed_2_shoulder" class="bottle_shoulder"/>
       <geom name="bottle_placed_2_neck" class="bottle_neck"/>
       <geom name="bottle_placed_2_cap" class="bottle_cap"/>
     </body>
-    <body name="bottle_placed_3" pos=".09213257 .17081896 .09649951" quat=".5 0 0 -.8660254037844386">
+    <body name="bottle_placed_3" pos="0.03484411 0.17546622 -.007" quat=".7071067811865476 0 0 -.7071067811865476">
       <freejoint/>
       <geom name="bottle_placed_3_body" class="bottle_body"/>
       <geom name="bottle_placed_3_shoulder" class="bottle_shoulder"/>
       <geom name="bottle_placed_3_neck" class="bottle_neck"/>
       <geom name="bottle_placed_3_cap" class="bottle_cap"/>
     </body>
-    <site name="target_cell_center" pos=".15275435 .13581896 .09649951" size=".004" rgba=".15 .80 .38 1"/>
+    <site name="target_cell_center" pos="0.10484411 0.17546622 -.007" size=".004" rgba=".15 .80 .38 1"/>
   </worldbody>
   <keyframe>
     <key name="standby"
-         qpos="-.02348797 -1.22985912 2.38230284 -1.16064546 .02348721 -.00019666 .15 -.15 .15 -.15 .15 -.15
-               .19399984 -.06437967 .14149951 1 0 0 0
-               .12713257 .23144074 .09649951 .5 0 0 -.8660254037844386
-               .18775435 .19644074 .09649951 .5 0 0 -.8660254037844386
-               .09213257 .17081896 .09649951 .5 0 0 -.8660254037844386"
-         ctrl="-.02348797 -1.22985912 2.38230284 -1.16064546 .02348721 -.00019666 .15"/>
+         qpos="1.50378043 -.40376298 1.85230090 1.57115064 -1.63831924 -3.01996357 .15 -.15 .15 -.15 .15 -.15
+               .19399984 -.06437967 -.012 1 0 0 0
+               0.03484411 0.24546622 -.007 .7071067811865476 0 0 -.7071067811865476
+               0.10484411 0.24546622 -.007 .7071067811865476 0 0 -.7071067811865476
+               0.03484411 0.17546622 -.007 .7071067811865476 0 0 -.7071067811865476"
+         ctrl="1.50378043 -.40376298 1.85230090 1.57115064 -1.63831924 -3.01996357 .15"/>
   </keyframe>
 </mujoco>
