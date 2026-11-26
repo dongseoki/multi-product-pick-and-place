@@ -79,7 +79,30 @@ uv run --locked --with trimesh==5.2.2 --with pycollada==0.9.3 \
 
 대기 자세에서 수평으로 45 mm 접근한 뒤 닫기 → 60 mm 상승 → 로봇 베이스 주위로 60° 회전 → 빈 칸 바닥까지 수직 하강 → 열기 → 수직 후퇴 순으로 확인했다. 임시 MuJoCo 모델에서 **693개 자세**를 검사했고, 박스 벽·컨베이어·기존 병 및 대상 병 몸통과의 금지 접촉이 없었다. 손가락의 병목·뚜껑·어깨 접촉과 의도한 바닥 지지는 허용했다.
 
-이 검사는 이송 구간의 병을 경로상에 직립시킨 **기하 검사**다. 자세 사이의 연속 충돌, 로봇 자체 충돌, 실제 제어에 따른 미끄러짐·낙하·안착은 검증하지 않았다. 이 배치를 바탕으로 다음 단계에서 장면 v0 MJCF를 만든다.
+이 검사는 이송 구간의 병을 경로상에 직립시킨 **기하 검사**다. 자세 사이의 연속 충돌, 로봇 자체 충돌, 실제 제어에 따른 미끄러짐·낙하·안착은 검증하지 않았다. 이 배치를 [장면 v0 MJCF](../scenes/v0.xml)에 반영했다.
+
+## 장면 v0 실행과 확인
+
+저장소 루트에서 처음에만 제조사 고정 버전의 로봇 파일을 내려받아 MuJoCo 형식으로 변환한다. 생성된 `scenes/_mycobot/`은 Git에 포함하지 않는다. 이후에는 네트워크 없이 장면을 검사할 수 있다.
+
+```bash
+uv run --locked --with trimesh==5.2.2 --with pycollada==0.9.3 \
+  python scripts/prepare_v0_robot.py
+uv run --locked python scripts/check_v0_scene.py
+```
+
+마지막 명령에 `--viewer`를 붙이면 대기 자세에서 MuJoCo 뷰어가 열린다. `--screenshot docs/scene-v0.png`를 붙이면 1초 대기 후의 화면을 저장한다.
+
+```text
+PASS: 4 bottles, total 0.600 kg
+PASS: 3 occupied cells, 1 empty target cell (+x, +y)
+PASS: standby held for 1.000 s; max bottle drift 0.574 mm
+PASS: only bottle-base support contacts; all 4 bottles supported after settling
+```
+
+![장면 v0: 투입 병 1개와 마지막 칸이 비어 있는 2×2 박스](scene-v0.png)
+
+초기 대기 상태의 겹침과 안정성만 검증했다. 전체 집기·이송·배치 사이클과 최종 10회 시험 결과는 포함하지 않는다.
 
 ### 최종 시험에 남은 일
 
